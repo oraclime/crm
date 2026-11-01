@@ -1,0 +1,294 @@
+{
+  "entities": {
+    "CrmUser": {
+      "title": "CRM User Profile",
+      "description": "User account and role assignment for ORA CRM (ADMIN, MANAGER, STAFF).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 180 },
+        "passwordHash": { "type": "string", "maxLength": 128 },
+        "role": { "type": "string", "enum": ["ADMIN", "MANAGER", "STAFF"] },
+        "phone": { "type": "string", "maxLength": 30 },
+        "city": { "type": "string", "maxLength": 80 },
+        "assignedManagerId": { "type": "string", "maxLength": 128 },
+        "active": { "type": "boolean" },
+        "lastLoginAt": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "uid", "name", "email", "role", "active", "createdAt", "updatedAt"]
+    },
+    "CrmLead": {
+      "title": "CRM Showroom Lead",
+      "description": "AC Showroom, Dealer, or Electronics Retailer lead managed across the ORACLIME partnership lifecycle.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "leadCode": { "type": "string", "maxLength": 40 },
+        "showroomName": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "businessName": { "type": "string", "maxLength": 200 },
+        "ownerName": { "type": "string", "maxLength": 140 },
+        "contactPerson": { "type": "string", "maxLength": 140 },
+        "whatsappNumber": { "type": "string", "maxLength": 30 },
+        "normalizedPhone": { "type": "string", "maxLength": 20 },
+        "formattedPhone": { "type": "string", "maxLength": 30 },
+        "isValidPhone": { "type": "boolean" },
+        "alternativeNumber": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 180 },
+        "city": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "maxLength": 100 },
+        "fullAddress": { "type": "string", "maxLength": 500 },
+        "businessCategory": {
+          "type": "string",
+          "enum": [
+            "AC Showroom",
+            "AC Dealer",
+            "Electronics Showroom",
+            "Multi-brand AC Dealer",
+            "Local AC Retailer",
+            "Business Partner"
+          ]
+        },
+        "leadSource": { "type": "string", "maxLength": 100 },
+        "assignedManager": { "type": "string", "maxLength": 128 },
+        "assignedStaff": { "type": "string", "maxLength": 128 },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "status": {
+          "type": "string",
+          "enum": [
+            "New Lead",
+            "Not Contacted",
+            "Contacted",
+            "Message Sent",
+            "Response Received",
+            "Interested",
+            "Negotiation",
+            "Follow-up Pending",
+            "Partnership Confirmed",
+            "Not Interested",
+            "Not Responding",
+            "Invalid Lead",
+            "Duplicate Lead"
+          ]
+        },
+        "createdDate": { "type": "string", "maxLength": 64 },
+        "lastContactDate": { "type": "string", "maxLength": 64 },
+        "nextFollowUpDate": { "type": "string", "maxLength": 64 },
+        "remarks": { "type": "string", "maxLength": 2000 },
+        "optedOut": { "type": "boolean" },
+        "isDeleted": { "type": "boolean" },
+        "deletedAt": { "type": "string", "maxLength": 64 },
+        "deletedBy": { "type": "string", "maxLength": 128 },
+        "deletionReason": { "type": "string", "maxLength": 500 },
+        "createdByUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": [
+        "id",
+        "leadCode",
+        "showroomName",
+        "whatsappNumber",
+        "city",
+        "businessCategory",
+        "priority",
+        "status",
+        "createdDate",
+        "isDeleted",
+        "createdByUid"
+      ]
+    },
+    "CrmFollowUp": {
+      "title": "CRM Follow-Up Schedule",
+      "description": "Scheduled follow-up call or visit for a showroom lead.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "showroomName": { "type": "string", "maxLength": 200 },
+        "contactPerson": { "type": "string", "maxLength": 140 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "city": { "type": "string", "maxLength": 100 },
+        "scheduledAt": { "type": "string", "maxLength": 64 },
+        "assignedStaff": { "type": "string", "maxLength": 128 },
+        "notes": { "type": "string", "maxLength": 1500 },
+        "callOutcome": { "type": "string", "maxLength": 500 },
+        "customerResponse": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["Pending", "Completed", "Overdue", "Rescheduled"] },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "leadId", "showroomName", "scheduledAt", "assignedStaff", "status", "createdByUid", "createdAt"]
+    },
+    "CrmPartnership": {
+      "title": "ORACLIME Showroom Partnership",
+      "description": "Converted showroom partnership opportunity and commission agreement.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "partnershipCode": { "type": "string", "maxLength": 40 },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "showroomName": { "type": "string", "maxLength": 200 },
+        "ownerName": { "type": "string", "maxLength": 140 },
+        "contactDetails": { "type": "string", "maxLength": 200 },
+        "city": { "type": "string", "maxLength": 100 },
+        "partnershipDate": { "type": "string", "maxLength": 64 },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Interested",
+            "Discussion",
+            "Negotiation",
+            "Agreement Pending",
+            "Active Partner",
+            "Inactive Partner",
+            "Rejected"
+          ]
+        },
+        "agreedCommissionTerms": { "type": "string", "maxLength": 500 },
+        "serviceCategories": { "type": "string", "maxLength": 500 },
+        "agreementNotes": { "type": "string", "maxLength": 1500 },
+        "assignedManager": { "type": "string", "maxLength": 128 },
+        "nextReviewDate": { "type": "string", "maxLength": 64 },
+        "createdByUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": [
+        "id",
+        "partnershipCode",
+        "leadId",
+        "showroomName",
+        "city",
+        "partnershipDate",
+        "status",
+        "createdByUid"
+      ]
+    },
+    "CrmTask": {
+      "title": "CRM Staff Task",
+      "description": "Operational task linked to a showroom lead or partnership.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 1500 },
+        "assignedStaff": { "type": "string", "maxLength": 128 },
+        "relatedLeadId": { "type": "string", "maxLength": 128 },
+        "relatedLeadName": { "type": "string", "maxLength": 200 },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "dueDate": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["Pending", "In Progress", "Completed", "Overdue", "Cancelled"] },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "title", "assignedStaff", "priority", "dueDate", "status", "createdByUid", "createdAt"]
+    },
+    "CrmIssue": {
+      "title": "CRM Problem & Issue Ticket",
+      "description": "Showroom outreach or partnership issue tracker.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Invalid Number",
+            "WhatsApp Unavailable",
+            "No Response",
+            "Wrong Contact",
+            "Duplicate Lead",
+            "Incorrect Business Information",
+            "Commission Discussion",
+            "Partnership Terms",
+            "Other"
+          ]
+        },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "showroomName": { "type": "string", "maxLength": 200 },
+        "priority": { "type": "string", "enum": ["High", "Medium", "Low"] },
+        "assignedPerson": { "type": "string", "maxLength": 128 },
+        "description": { "type": "string", "maxLength": 1500 },
+        "resolutionNotes": { "type": "string", "maxLength": 1500 },
+        "status": { "type": "string", "enum": ["Open", "In Progress", "Resolved"] },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "category", "priority", "assignedPerson", "description", "status", "createdByUid", "createdAt"]
+    },
+    "CrmCampaign": {
+      "title": "CRM Outreach Campaign",
+      "description": "Manual WhatsApp click-to-chat outreach campaign for AC Showrooms and Dealers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "campaignType": { "type": "string", "maxLength": 100 },
+        "templateId": { "type": "string", "maxLength": 128 },
+        "assignedUser": { "type": "string", "maxLength": 128 },
+        "startDate": { "type": "string", "maxLength": 64 },
+        "endDate": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["Draft", "Active", "Paused", "Completed", "Stopped"] },
+        "selectedCount": { "type": "number" },
+        "chatsOpenedCount": { "type": "number" },
+        "confirmedSentCount": { "type": "number" },
+        "pendingCount": { "type": "number" },
+        "skippedCount": { "type": "number" },
+        "interestedCount": { "type": "number" },
+        "optOutCount": { "type": "number" },
+        "createdByUid": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "name", "campaignType", "status", "createdByUid"]
+    },
+    "CrmActivityLog": {
+      "title": "CRM Activity Timeline Entry",
+      "description": "Immutable audit and activity timeline event.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "leadId": { "type": "string", "maxLength": 128 },
+        "showroomName": { "type": "string", "maxLength": 200 },
+        "actionType": { "type": "string", "maxLength": 100 },
+        "details": { "type": "string", "maxLength": 1500 },
+        "performedBy": { "type": "string", "maxLength": 140 },
+        "performedByRole": { "type": "string", "maxLength": 40 },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "actionType", "details", "performedBy", "createdByUid", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/crm_users/{userId}": {
+      "schema": { "$ref": "#/entities/CrmUser" },
+      "description": "Stores ORA CRM user profiles and role assignments."
+    },
+    "/crm_leads/{leadId}": {
+      "schema": { "$ref": "#/entities/CrmLead" },
+      "description": "Stores AC Showroom and Dealer leads."
+    },
+    "/crm_followups/{followupId}": {
+      "schema": { "$ref": "#/entities/CrmFollowUp" },
+      "description": "Stores scheduled follow-ups and call outcomes."
+    },
+    "/crm_partnerships/{partnershipId}": {
+      "schema": { "$ref": "#/entities/CrmPartnership" },
+      "description": "Stores converted showroom partnership records."
+    },
+    "/crm_tasks/{taskId}": {
+      "schema": { "$ref": "#/entities/CrmTask" },
+      "description": "Stores staff and manager operational tasks."
+    },
+    "/crm_issues/{issueId}": {
+      "schema": { "$ref": "#/entities/CrmIssue" },
+      "description": "Stores showroom outreach problems and resolution tickets."
+    },
+    "/crm_campaigns/{campaignId}": {
+      "schema": { "$ref": "#/entities/CrmCampaign" },
+      "description": "Stores WhatsApp outreach campaign metadata and counters."
+    },
+    "/crm_activity_logs/{logId}": {
+      "schema": { "$ref": "#/entities/CrmActivityLog" },
+      "description": "Stores audit and lead timeline activity logs."
+    }
+  }
+}

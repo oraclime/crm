@@ -1,0 +1,6 @@
+{
+  "name": "ORACLIME Showroom Partnership Outreach",
+  "description": "Professional WhatsApp Lead Campaign & Dealer CRM module for ORACLIME's AC Showroom and Dealer Partnership Program.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

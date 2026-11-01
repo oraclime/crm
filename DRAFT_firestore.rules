@@ -1,0 +1,310 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'amaanrisky417@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidCrmUser(data) {
+      return data.keys().hasAll(['id', 'uid', 'name', 'email', 'role', 'active', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['id', 'uid', 'name', 'email', 'passwordHash', 'role', 'phone', 'city', 'assignedManagerId', 'active', 'lastLoginAt', 'createdAt', 'updatedAt']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && (data.uid == request.auth.uid || isAdmin()) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 180 &&
+        data.role in ['ADMIN', 'MANAGER', 'STAFF'] &&
+        data.active is bool &&
+        data.createdAt is string && data.createdAt.size() <= 64 &&
+        data.updatedAt is string && data.updatedAt.size() <= 64 &&
+        (!('passwordHash' in data) || (data.passwordHash is string && data.passwordHash.size() <= 128)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+        (!('city' in data) || (data.city is string && data.city.size() <= 80)) &&
+        (!('assignedManagerId' in data) || (data.assignedManagerId is string && data.assignedManagerId.size() <= 128)) &&
+        (!('lastLoginAt' in data) || (data.lastLoginAt is string && data.lastLoginAt.size() <= 64));
+    }
+
+    function isValidCrmLead(data) {
+      return data.keys().hasAll(['id', 'leadCode', 'showroomName', 'whatsappNumber', 'city', 'businessCategory', 'priority', 'status', 'createdDate', 'isDeleted', 'createdByUid']) &&
+        data.keys().hasOnly([
+          'id', 'leadCode', 'showroomName', 'businessName', 'ownerName', 'contactPerson',
+          'whatsappNumber', 'normalizedPhone', 'formattedPhone', 'isValidPhone', 'alternativeNumber',
+          'email', 'city', 'state', 'fullAddress', 'businessCategory', 'leadSource',
+          'assignedManager', 'assignedStaff', 'priority', 'status', 'createdDate',
+          'lastContactDate', 'nextFollowUpDate', 'remarks', 'optedOut', 'isDeleted',
+          'deletedAt', 'deletedBy', 'deletionReason', 'createdByUid'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.leadCode is string && data.leadCode.size() >= 1 && data.leadCode.size() <= 40 &&
+        data.showroomName is string && data.showroomName.size() >= 1 && data.showroomName.size() <= 200 &&
+        data.whatsappNumber is string && data.whatsappNumber.size() <= 30 &&
+        data.city is string && data.city.size() <= 100 &&
+        data.businessCategory in ['AC Showroom', 'AC Dealer', 'Electronics Showroom', 'Multi-brand AC Dealer', 'Local AC Retailer', 'Business Partner'] &&
+        data.priority in ['High', 'Medium', 'Low'] &&
+        data.status in ['New Lead', 'Not Contacted', 'Contacted', 'Message Sent', 'Response Received', 'Interested', 'Negotiation', 'Follow-up Pending', 'Partnership Confirmed', 'Not Interested', 'Not Responding', 'Invalid Lead', 'Duplicate Lead'] &&
+        data.createdDate is string && data.createdDate.size() <= 64 &&
+        data.isDeleted is bool &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        (!('businessName' in data) || (data.businessName is string && data.businessName.size() <= 200)) &&
+        (!('ownerName' in data) || (data.ownerName is string && data.ownerName.size() <= 140)) &&
+        (!('contactPerson' in data) || (data.contactPerson is string && data.contactPerson.size() <= 140)) &&
+        (!('normalizedPhone' in data) || (data.normalizedPhone is string && data.normalizedPhone.size() <= 20)) &&
+        (!('formattedPhone' in data) || (data.formattedPhone is string && data.formattedPhone.size() <= 30)) &&
+        (!('isValidPhone' in data) || (data.isValidPhone is bool)) &&
+        (!('alternativeNumber' in data) || (data.alternativeNumber is string && data.alternativeNumber.size() <= 30)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 180)) &&
+        (!('state' in data) || (data.state is string && data.state.size() <= 100)) &&
+        (!('fullAddress' in data) || (data.fullAddress is string && data.fullAddress.size() <= 500)) &&
+        (!('leadSource' in data) || (data.leadSource is string && data.leadSource.size() <= 100)) &&
+        (!('assignedManager' in data) || (data.assignedManager is string && data.assignedManager.size() <= 128)) &&
+        (!('assignedStaff' in data) || (data.assignedStaff is string && data.assignedStaff.size() <= 128)) &&
+        (!('lastContactDate' in data) || (data.lastContactDate is string && data.lastContactDate.size() <= 64)) &&
+        (!('nextFollowUpDate' in data) || (data.nextFollowUpDate is string && data.nextFollowUpDate.size() <= 64)) &&
+        (!('remarks' in data) || (data.remarks is string && data.remarks.size() <= 2000)) &&
+        (!('optedOut' in data) || (data.optedOut is bool)) &&
+        (!('deletedAt' in data) || (data.deletedAt is string && data.deletedAt.size() <= 64)) &&
+        (!('deletedBy' in data) || (data.deletedBy is string && data.deletedBy.size() <= 128)) &&
+        (!('deletionReason' in data) || (data.deletionReason is string && data.deletionReason.size() <= 500));
+    }
+
+    function isValidCrmFollowUp(data) {
+      return data.keys().hasAll(['id', 'leadId', 'showroomName', 'scheduledAt', 'assignedStaff', 'status', 'createdByUid', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'leadId', 'showroomName', 'contactPerson', 'phone', 'city', 'scheduledAt', 'assignedStaff', 'notes', 'callOutcome', 'customerResponse', 'status', 'createdByUid', 'createdAt']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.leadId is string && data.leadId.size() >= 1 && data.leadId.size() <= 128 &&
+        data.showroomName is string && data.showroomName.size() <= 200 &&
+        data.scheduledAt is string && data.scheduledAt.size() <= 64 &&
+        data.assignedStaff is string && data.assignedStaff.size() <= 128 &&
+        data.status in ['Pending', 'Completed', 'Overdue', 'Rescheduled'] &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        data.createdAt is string && data.createdAt.size() <= 64 &&
+        (!('contactPerson' in data) || (data.contactPerson is string && data.contactPerson.size() <= 140)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+        (!('city' in data) || (data.city is string && data.city.size() <= 100)) &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1500)) &&
+        (!('callOutcome' in data) || (data.callOutcome is string && data.callOutcome.size() <= 500)) &&
+        (!('customerResponse' in data) || (data.customerResponse is string && data.customerResponse.size() <= 500));
+    }
+
+    function isValidCrmPartnership(data) {
+      return data.keys().hasAll(['id', 'partnershipCode', 'leadId', 'showroomName', 'city', 'partnershipDate', 'status', 'createdByUid']) &&
+        data.keys().hasOnly(['id', 'partnershipCode', 'leadId', 'showroomName', 'ownerName', 'contactDetails', 'city', 'partnershipDate', 'status', 'agreedCommissionTerms', 'serviceCategories', 'agreementNotes', 'assignedManager', 'nextReviewDate', 'createdByUid']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.partnershipCode is string && data.partnershipCode.size() <= 40 &&
+        data.leadId is string && data.leadId.size() <= 128 &&
+        data.showroomName is string && data.showroomName.size() <= 200 &&
+        data.city is string && data.city.size() <= 100 &&
+        data.partnershipDate is string && data.partnershipDate.size() <= 64 &&
+        data.status in ['Interested', 'Discussion', 'Negotiation', 'Agreement Pending', 'Active Partner', 'Inactive Partner', 'Rejected'] &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        (!('ownerName' in data) || (data.ownerName is string && data.ownerName.size() <= 140)) &&
+        (!('contactDetails' in data) || (data.contactDetails is string && data.contactDetails.size() <= 200)) &&
+        (!('agreedCommissionTerms' in data) || (data.agreedCommissionTerms is string && data.agreedCommissionTerms.size() <= 500)) &&
+        (!('serviceCategories' in data) || (data.serviceCategories is string && data.serviceCategories.size() <= 500)) &&
+        (!('agreementNotes' in data) || (data.agreementNotes is string && data.agreementNotes.size() <= 1500)) &&
+        (!('assignedManager' in data) || (data.assignedManager is string && data.assignedManager.size() <= 128)) &&
+        (!('nextReviewDate' in data) || (data.nextReviewDate is string && data.nextReviewDate.size() <= 64));
+    }
+
+    function isValidCrmTask(data) {
+      return data.keys().hasAll(['id', 'title', 'assignedStaff', 'priority', 'dueDate', 'status', 'createdByUid', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'title', 'description', 'assignedStaff', 'relatedLeadId', 'relatedLeadName', 'priority', 'dueDate', 'status', 'createdByUid', 'createdAt']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.assignedStaff is string && data.assignedStaff.size() <= 128 &&
+        data.priority in ['High', 'Medium', 'Low'] &&
+        data.dueDate is string && data.dueDate.size() <= 64 &&
+        data.status in ['Pending', 'In Progress', 'Completed', 'Overdue', 'Cancelled'] &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        data.createdAt is string && data.createdAt.size() <= 64 &&
+        (!('description' in data) || (data.description is string && data.description.size() <= 1500)) &&
+        (!('relatedLeadId' in data) || (data.relatedLeadId is string && data.relatedLeadId.size() <= 128)) &&
+        (!('relatedLeadName' in data) || (data.relatedLeadName is string && data.relatedLeadName.size() <= 200));
+    }
+
+    function isValidCrmIssue(data) {
+      return data.keys().hasAll(['id', 'category', 'priority', 'assignedPerson', 'description', 'status', 'createdByUid', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'category', 'leadId', 'showroomName', 'priority', 'assignedPerson', 'description', 'resolutionNotes', 'status', 'createdByUid', 'createdAt']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.category in ['Invalid Number', 'WhatsApp Unavailable', 'No Response', 'Wrong Contact', 'Duplicate Lead', 'Incorrect Business Information', 'Commission Discussion', 'Partnership Terms', 'Other'] &&
+        data.priority in ['High', 'Medium', 'Low'] &&
+        data.assignedPerson is string && data.assignedPerson.size() <= 128 &&
+        data.description is string && data.description.size() <= 1500 &&
+        data.status in ['Open', 'In Progress', 'Resolved'] &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        data.createdAt is string && data.createdAt.size() <= 64 &&
+        (!('leadId' in data) || (data.leadId is string && data.leadId.size() <= 128)) &&
+        (!('showroomName' in data) || (data.showroomName is string && data.showroomName.size() <= 200)) &&
+        (!('resolutionNotes' in data) || (data.resolutionNotes is string && data.resolutionNotes.size() <= 1500));
+    }
+
+    function isValidCrmCampaign(data) {
+      return data.keys().hasAll(['id', 'name', 'campaignType', 'status', 'createdByUid']) &&
+        data.keys().hasOnly(['id', 'name', 'campaignType', 'templateId', 'assignedUser', 'startDate', 'endDate', 'status', 'selectedCount', 'chatsOpenedCount', 'confirmedSentCount', 'pendingCount', 'skippedCount', 'interestedCount', 'optOutCount', 'createdByUid']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 200 &&
+        data.campaignType is string && data.campaignType.size() <= 100 &&
+        data.status in ['Draft', 'Active', 'Paused', 'Completed', 'Stopped'] &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        (!('templateId' in data) || (data.templateId is string && data.templateId.size() <= 128)) &&
+        (!('assignedUser' in data) || (data.assignedUser is string && data.assignedUser.size() <= 128)) &&
+        (!('startDate' in data) || (data.startDate is string && data.startDate.size() <= 64)) &&
+        (!('endDate' in data) || (data.endDate is string && data.endDate.size() <= 64)) &&
+        (!('selectedCount' in data) || (data.selectedCount is number)) &&
+        (!('chatsOpenedCount' in data) || (data.chatsOpenedCount is number)) &&
+        (!('confirmedSentCount' in data) || (data.confirmedSentCount is number)) &&
+        (!('pendingCount' in data) || (data.pendingCount is number)) &&
+        (!('skippedCount' in data) || (data.skippedCount is number)) &&
+        (!('interestedCount' in data) || (data.interestedCount is number)) &&
+        (!('optOutCount' in data) || (data.optOutCount is number));
+    }
+
+    function isValidCrmActivityLog(data) {
+      return data.keys().hasAll(['id', 'actionType', 'details', 'performedBy', 'createdByUid', 'timestamp']) &&
+        data.keys().hasOnly(['id', 'leadId', 'showroomName', 'actionType', 'details', 'performedBy', 'performedByRole', 'createdByUid', 'timestamp']) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.actionType is string && data.actionType.size() <= 100 &&
+        data.details is string && data.details.size() <= 1500 &&
+        data.performedBy is string && data.performedBy.size() <= 140 &&
+        data.createdByUid is string && data.createdByUid.size() <= 128 && data.createdByUid == request.auth.uid &&
+        data.timestamp is string && data.timestamp.size() <= 64 &&
+        (!('leadId' in data) || (data.leadId is string && data.leadId.size() <= 128)) &&
+        (!('showroomName' in data) || (data.showroomName is string && data.showroomName.size() <= 200)) &&
+        (!('performedByRole' in data) || (data.performedByRole is string && data.performedByRole.size() <= 40));
+    }
+
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && isValidId(adminId);
+    }
+
+    match /crm_users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isSignedIn() && (existing().uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(userId) && (userId == request.auth.uid || isAdmin()) && isValidCrmUser(incoming()) && (incoming().role != 'ADMIN' || isAdmin());
+      allow update: if isSignedIn() && isValidId(userId) && isValidCrmUser(incoming()) && incoming().uid == existing().uid && incoming().createdAt == existing().createdAt && (
+        isAdmin() ||
+        (request.auth.uid == userId && incoming().role == existing().role && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'passwordHash', 'lastLoginAt', 'updatedAt']))
+      );
+      allow delete: if isAdmin() && isValidId(userId) && userId != request.auth.uid;
+    }
+
+    match /crm_leads/{leadId} {
+      allow get: if isSignedIn() && isValidId(leadId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(leadId) && isValidCrmLead(incoming());
+      allow update: if isSignedIn() && isValidId(leadId) && isValidCrmLead(incoming()) && incoming().createdByUid == existing().createdByUid && incoming().createdDate == existing().createdDate && (
+        isAdmin() ||
+        (existing().createdByUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+          'showroomName', 'businessName', 'ownerName', 'contactPerson', 'whatsappNumber',
+          'normalizedPhone', 'formattedPhone', 'isValidPhone', 'alternativeNumber', 'email',
+          'city', 'state', 'fullAddress', 'businessCategory', 'leadSource', 'assignedManager',
+          'assignedStaff', 'priority', 'status', 'lastContactDate', 'nextFollowUpDate',
+          'remarks', 'optedOut', 'isDeleted', 'deletedAt', 'deletedBy', 'deletionReason'
+        ]))
+      );
+      allow delete: if isAdmin() && isValidId(leadId);
+    }
+
+    match /crm_followups/{followupId} {
+      allow get: if isSignedIn() && isValidId(followupId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(followupId) && isValidCrmFollowUp(incoming());
+      allow update: if isSignedIn() && isValidId(followupId) && isValidCrmFollowUp(incoming()) && incoming().createdByUid == existing().createdByUid && incoming().createdAt == existing().createdAt && (
+        isAdmin() ||
+        (existing().createdByUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+          'scheduledAt', 'assignedStaff', 'notes', 'callOutcome', 'customerResponse', 'status'
+        ]))
+      );
+      allow delete: if isSignedIn() && isValidId(followupId) && (existing().createdByUid == request.auth.uid || isAdmin());
+    }
+
+    match /crm_partnerships/{partnershipId} {
+      allow get: if isSignedIn() && isValidId(partnershipId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(partnershipId) && isValidCrmPartnership(incoming());
+      allow update: if isSignedIn() && isValidId(partnershipId) && isValidCrmPartnership(incoming()) && incoming().createdByUid == existing().createdByUid && (
+        isAdmin() ||
+        (existing().createdByUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+          'ownerName', 'contactDetails', 'status', 'agreedCommissionTerms', 'serviceCategories',
+          'agreementNotes', 'assignedManager', 'nextReviewDate'
+        ]))
+      );
+      allow delete: if isAdmin() && isValidId(partnershipId);
+    }
+
+    match /crm_tasks/{taskId} {
+      allow get: if isSignedIn() && isValidId(taskId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(taskId) && isValidCrmTask(incoming());
+      allow update: if isSignedIn() && isValidId(taskId) && isValidCrmTask(incoming()) && incoming().createdByUid == existing().createdByUid && incoming().createdAt == existing().createdAt && (
+        isAdmin() ||
+        (existing().createdByUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'description', 'assignedStaff', 'priority', 'dueDate', 'status'
+        ]))
+      );
+      allow delete: if isSignedIn() && isValidId(taskId) && (existing().createdByUid == request.auth.uid || isAdmin());
+    }
+
+    match /crm_issues/{issueId} {
+      allow get: if isSignedIn() && isValidId(issueId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(issueId) && isValidCrmIssue(incoming());
+      allow update: if isSignedIn() && isValidId(issueId) && isValidCrmIssue(incoming()) && incoming().createdByUid == existing().createdByUid && incoming().createdAt == existing().createdAt && (
+        isAdmin() ||
+        (existing().createdByUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+          'category', 'priority', 'assignedPerson', 'description', 'resolutionNotes', 'status'
+        ]))
+      );
+      allow delete: if isAdmin() && isValidId(issueId);
+    }
+
+    match /crm_campaigns/{campaignId} {
+      allow get: if isSignedIn() && isValidId(campaignId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(campaignId) && isValidCrmCampaign(incoming());
+      allow update: if isSignedIn() && isValidId(campaignId) && isValidCrmCampaign(incoming()) && incoming().createdByUid == existing().createdByUid && (
+        isAdmin() ||
+        (existing().createdByUid == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'campaignType', 'templateId', 'assignedUser', 'startDate', 'endDate',
+          'status', 'selectedCount', 'chatsOpenedCount', 'confirmedSentCount', 'pendingCount',
+          'skippedCount', 'interestedCount', 'optOutCount'
+        ]))
+      );
+      allow delete: if isAdmin() && isValidId(campaignId);
+    }
+
+    match /crm_activity_logs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId) && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().createdByUid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(logId) && isValidCrmActivityLog(incoming());
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(logId);
+    }
+  }
+}
